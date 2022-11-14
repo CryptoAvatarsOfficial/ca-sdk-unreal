@@ -1,2 +1,2 @@
-# ca-unreal-sdk
-Cryptoavatars Unreal SDK
+# cryptoavatars_sdk
+Unreal version of CryptoAvatars SDK
