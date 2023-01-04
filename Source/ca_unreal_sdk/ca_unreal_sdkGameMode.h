@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Http.h"
 #include "ca_unreal_sdkGameMode.generated.h"
-
 UCLASS(minimalapi)
 class Aca_unreal_sdkGameMode : public AGameModeBase
 {
@@ -13,6 +13,9 @@ class Aca_unreal_sdkGameMode : public AGameModeBase
 
 public:
 	Aca_unreal_sdkGameMode();
+	virtual void StartPlay() override;
+private:
+	void OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
 };
 
 

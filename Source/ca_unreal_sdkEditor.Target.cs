@@ -9,6 +9,8 @@ public class ca_unreal_sdkEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
 		ExtraModuleNames.Add("ca_unreal_sdk");
-	}
+        ExtraModuleNames.AddRange(new string[] { "VRM4U" });
+    }
 }
