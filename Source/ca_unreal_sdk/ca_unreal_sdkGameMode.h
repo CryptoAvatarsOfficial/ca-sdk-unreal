@@ -14,6 +14,8 @@ class Aca_unreal_sdkGameMode : public AGameModeBase
 public:
 	Aca_unreal_sdkGameMode();
 	virtual void StartPlay() override;
+	void GetRequestExample();
+	void PostRequestExample();
 private:
 	void OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
 };
