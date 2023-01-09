@@ -17,7 +17,7 @@ Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 void Aca_unreal_sdkGameMode::StartPlay() {
 	Super::StartPlay();
 	PostRequestExample();
-	//GetRequestExample();
+	GetRequestExample();
 }
 
 void Aca_unreal_sdkGameMode::GetRequestExample()
@@ -30,8 +30,6 @@ void Aca_unreal_sdkGameMode::GetRequestExample()
 	Request->ProcessRequest();
 }
 void Aca_unreal_sdkGameMode::PostRequestExample() {
-	UE_LOG(LogTemp, Display, TEXT("Entro %s"), "ENTROOOOOOO");
-
 	#pragma region Body Part
 	FString RequestBody = "{}";
 	TSharedRef<FJsonObject> RequestObj = MakeShared<FJsonObject>();
@@ -52,7 +50,6 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	Request->SetHeader("API-KEY", "$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
 	Request->SetContentAsString(RequestBody);
 	Request->ProcessRequest();
-	//RequestObj->
 }
 void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
 {
