@@ -3,9 +3,10 @@
 #include "ca_unreal_sdkGameMode.h"
 #include "ca_unreal_sdkCharacter.h"
 #include "Json.h"
-#include "UObject/ConstructorHelpers.h"
 #include "CA_SDK/Public/Structs/Structs.h"
-#include <JsonObjectConverter.h>
+#include "JsonObjectConverter.h"
+#include "UObject/ConstructorHelpers.h"
+
 Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 {
 	// set default pawn class to our Blueprinted character
@@ -58,13 +59,13 @@ void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpRe
 	TSharedPtr<FJsonObject> ResponseObj;
 	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	FJsonSerializer::Deserialize(Reader, ResponseObj);
-	//FNftsArray nfts;
-	//
-	//if (!FJsonObjectConverter::JsonObjectStringToUStruct(*Response->GetContentAsString(), &nfts, 0, 0))
-	//{
-	//	// error
-	//	UE_LOG(LogTemp, Display, TEXT("Response %s"), "ERROR PARSING");
-	//}
+	FNftsArray nfts;
+	
+	if (!FJsonObjectConverter::JsonObjectStringToUStruct(*Response->GetContentAsString(), &nfts, 0, 0, false))
+	{
+		// error
+		UE_LOG(LogTemp, Display, TEXT("Response %s"), "ERROR PARSING");
+	}
 	//UE_LOG(LogTemp, Display, TEXT("Response %s"), bConnectedSuccessfully);
 	UE_LOG(LogTemp, Display, TEXT("Response %s"), *Response->GetContentAsString());
 	//UE_LOG(LogTemp, Display, TEXT("Name %s"), *ResponseObj->GetStringField("name"));
