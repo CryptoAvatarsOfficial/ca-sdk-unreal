@@ -20,7 +20,7 @@ Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 void Aca_unreal_sdkGameMode::StartPlay() {
 	Super::StartPlay();
 	PostRequestExample();
-	GetRequestExample();
+	//GetRequestExample();
 }
 
 void Aca_unreal_sdkGameMode::GetRequestExample()
@@ -60,15 +60,33 @@ void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpRe
 	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	FJsonSerializer::Deserialize(Reader, ResponseObj);
 	FNftsArray nfts;
-	
-	if (!FJsonObjectConverter::JsonObjectStringToUStruct(*Response->GetContentAsString(), &nfts, 0, 0, false))
-	{
-		// error
-		UE_LOG(LogTemp, Display, TEXT("Response %s"), "ERROR PARSING");
-	}
-	//UE_LOG(LogTemp, Display, TEXT("Response %s"), bConnectedSuccessfully);
 	UE_LOG(LogTemp, Display, TEXT("Response %s"), *Response->GetContentAsString());
-	//UE_LOG(LogTemp, Display, TEXT("Name %s"), *ResponseObj->GetStringField("name"));
+	TArray<TSharedPtr<FJsonValue>> JsonParsed;
+	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(*Response->GetContentAsString());
+	
+	TArray<TSharedPtr<FJsonValue>> nftsArray = ResponseObj->GetArrayField("nfts");
+	
+	for (int i = 0; i < nftsArray.Num(); i++) {
+		FNft nft;
+		FJsonObjectConverter::JsonObjectToUStruct(nftsArray[i]->AsObject().ToSharedRef(), &nft, 0, 0);
+		nfts.nfts.Add(nft);
+		UE_LOG(LogTemp, Display, TEXT("Response %s"), *FString(nft.metadata.StaticStruct()->GetName()));
+	}
+	
+	/*for (int32 i = 0; i < nftsArray.Num(); ++i) {
+		nfts.nfts[i] = nftsArray[i];
+	}*/
+	//FJsonObjectConverter::JsonObjectStringToUStruct(*Response->GetContentAsString(), &nfts, 0, 0);
+	
+	//UE_LOG(LogTemp, Display, TEXT("Response %s"), "PARSING SUCCESS");
+	////UE_LOG(LogTemp, Display, TEXT("Respones %s", n))
+	//for(auto nft : nftsArray)
+	//{
+	//	UE_LOG(LogTemp, Display, TEXT("Response %s"), *nft->AsString());
+	//}
+	
+	//UE_LOG(LogTemp, Display, TEXT("Response %s"), bConnectedSuccessfully);
+	//UE_LOG(LogTemp, Display, TEXT("Name %s"), *ResponseObj->GetIntegerField("name"));
 }
 template <typename T>
 void Aca_unreal_sdkGameMode::GetData(FString& data, T& dataStruct) {
