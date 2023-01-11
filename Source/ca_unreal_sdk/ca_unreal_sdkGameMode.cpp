@@ -70,7 +70,7 @@ void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpRe
 		FNft nft;
 		FJsonObjectConverter::JsonObjectToUStruct(nftsArray[i]->AsObject().ToSharedRef(), &nft, 0, 0);
 		nfts.nfts.Add(nft);
-		UE_LOG(LogTemp, Display, TEXT("Response %s"), *FString(nft.metadata.StaticStruct()->GetName()));
+		UE_LOG(LogTemp, Display, TEXT("Response %s"), *nft.metadata.name);
 	}
 	
 	/*for (int32 i = 0; i < nftsArray.Num(); ++i) {
