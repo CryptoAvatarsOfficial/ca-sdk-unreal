@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// © 2023 CryptoAvatars. All rights reserved
 
 #pragma once
 
@@ -9,7 +9,6 @@ class FCA_SDKModule : public IModuleInterface
 {
 public:
 
-	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 };
