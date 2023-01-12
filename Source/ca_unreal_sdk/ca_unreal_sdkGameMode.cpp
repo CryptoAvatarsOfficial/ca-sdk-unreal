@@ -4,9 +4,9 @@
 #include "ca_unreal_sdkCharacter.h"
 #include "Json.h"
 #include "CA_SDK/Public/Structs/Structs.h"
+#include "CA_SDK/Public/CryptoAvatars.h"
 #include "JsonObjectConverter.h"
 #include "UObject/ConstructorHelpers.h"
-
 Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 {
 	// set default pawn class to our Blueprinted character
@@ -19,7 +19,8 @@ Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 
 void Aca_unreal_sdkGameMode::StartPlay() {
 	Super::StartPlay();
-	PostRequestExample();
+	
+	//PostRequestExample();
 	//GetRequestExample();
 }
 
@@ -33,26 +34,35 @@ void Aca_unreal_sdkGameMode::GetRequestExample()
 	Request->ProcessRequest();
 }
 void Aca_unreal_sdkGameMode::PostRequestExample() {
-	#pragma region Body Part
-	FString RequestBody = "{}";
-	TSharedRef<FJsonObject> RequestObj = MakeShared<FJsonObject>();
+	//#pragma region Body Part
+	//FString RequestBody = "{}";
+	//TSharedRef<FJsonObject> RequestObj = MakeShared<FJsonObject>();
+	//TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
+	//FJsonSerializer::Serialize(RequestObj, Writer);
+	//#pragma endregion Body Part
+	//FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+	//// We can parametrize OnResponseReceived delegate
+	//Request->OnProcessRequestComplete().BindUObject(this, &Aca_unreal_sdkGameMode::OnResponseReceived);
+	//// Parametrize part of the URL
+	//Request->SetURL("https://api.cryptoavatars.io/v1/nfts/avatars/list?skip=0&limit=20");
+	//// This will always be the same
+	//Request->SetVerb("POST");
+	//Request->SetHeader("Content-Type", "application/json");
+	//// Parametrize the API-KEY Value
+	//Request->SetHeader("API-KEY", "$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
+	//Request->SetContentAsString(RequestBody);
+	//Request->ProcessRequest();
+
+	//CryptoAvatars cryptoAvatars("$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
+	//FString licenseType = "CC0";
+	//FString pageUrl = "https://api.cryptoavatars.io/v1/collections/total";
+	////cryptoAvatars.GetAvatars(licenseType, pageUrl, response);
+	//// You can add a callback function to do something with the response 
+	//cryptoAvatars.GetAvatars(licenseType, pageUrl, [](FHttpResponsePtr response) {
+	//	// Do something with the response
+	//	UE_LOG(LogTemp, Display, TEXT("Response: %s"), *response->GetContentAsString());
+	//	});
 	
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
-	FJsonSerializer::Serialize(RequestObj, Writer);
-	
-	#pragma endregion Body Part
-	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
-	// We can parametrize OnResponseReceived delegate
-	Request->OnProcessRequestComplete().BindUObject(this, &Aca_unreal_sdkGameMode::OnResponseReceived);
-	// Parametrize part of the URL
-	Request->SetURL("https://api.cryptoavatars.io/v1/nfts/avatars/list?skip=0&limit=20");
-	// This will always be the same
-	Request->SetVerb("POST");
-	Request->SetHeader("Content-Type", "application/json");
-	// Parametrize the API-KEY Value
-	Request->SetHeader("API-KEY", "$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
-	Request->SetContentAsString(RequestBody);
-	Request->ProcessRequest();
 }
 void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
 {
