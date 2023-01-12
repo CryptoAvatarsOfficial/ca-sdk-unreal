@@ -59,9 +59,11 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	FString avatarName = "Banana";
 	FString collectionName = "The User Collection";
 	FString userWallet = "0x242A5a3f94b2Fdd52Da2cb923214f4C2426a865B";
+	FString testEmail = "erik.mateos@cryptoavatars.io";
+	FString testPassword = "lolxdx";
 	//cryptoAvatars.GetAvatars(licenseType, pageUrl, response);
 	// You can add a callback function to do something with the response 
-	cryptoAvatars.GetUserAvatarsByCollectionName(userWallet, pageUrl, collectionName, [](FHttpResponsePtr response) {
+	cryptoAvatars.UserLogin(testEmail,testPassword,[](FHttpResponsePtr response) {
 		// Do something with the response
 		UE_LOG(LogTemp, Display, TEXT("Response: %s"), *response->GetContentAsString());
 		});
