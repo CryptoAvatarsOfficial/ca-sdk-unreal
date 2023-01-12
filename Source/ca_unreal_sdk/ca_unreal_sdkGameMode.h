@@ -20,6 +20,8 @@ private:
 	void OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
 	template<typename T>
 	void GetData(FString& data,T& dataStruct);
+	UTexture2D* Texture;
+
 };
 
 

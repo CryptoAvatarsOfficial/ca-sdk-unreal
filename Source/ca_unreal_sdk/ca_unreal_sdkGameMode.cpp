@@ -6,6 +6,8 @@
 #include "CA_SDK/Public/Structs/Structs.h"
 #include "CA_SDK/Public/CryptoAvatars.h"
 #include "JsonObjectConverter.h"
+#include "Components/Image.h"
+#include "Blueprint/UserWidget.h"
 #include "UObject/ConstructorHelpers.h"
 Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 {
@@ -61,11 +63,27 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	FString userWallet = "0x242A5a3f94b2Fdd52Da2cb923214f4C2426a865B";
 	FString testEmail = "erik.mateos@cryptoavatars.io";
 	FString testPassword = "lolxdx";
+	FString imageURL = "https://usercollection.mypinata.cloud/ipfs/QmVadEnWEXZYRP8VpzUDrpyK6vHv7omWLMvnbdRC6pt9nZ/CV%20Jin_Thumbnail.png";
 	//cryptoAvatars.GetAvatars(licenseType, pageUrl, response);
 	// You can add a callback function to do something with the response 
-	cryptoAvatars.UserLogin(testEmail,testPassword,[](FHttpResponsePtr response) {
-		// Do something with the response
-		UE_LOG(LogTemp, Display, TEXT("Response: %s"), *response->GetContentAsString());
+	
+	//FStringClassReference MyWidgetClassRef(TEXT("/Plugins/CA_SDK/Content/Widgets/AvatarCardImage.AvatarCardImage_C"));
+	//UUserWidget* ImageWidget = nullptr;
+	//if (UClass* ImageWidget = MyWidgetClassRef.TryLoadClass<UUserWidget>())
+	//{
+	//	ImageWidget = CreateWidget<UUserWidget>(this->GetWorld(), MyWidgetClassRef);
+	//	// Do stuff with MyWidget
+	//}
+	//UImage* Image = Cast<UImage>(ImageWidget->GetWidgetFromName(FName("YourImageName")));
+	//if (Image)
+	//{
+	//	// Set the texture of the Image
+	//	Image->SetBrushFromTexture(response);
+	//}
+	//// Add the widget to the viewport
+	//ImageWidget->AddToViewport();
+	cryptoAvatars.GetAvatarPreviewImage(imageURL,[&Texture](UTexture2D* response) {
+		Texture = response;
 		});
 	
 }
