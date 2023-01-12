@@ -58,9 +58,10 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	FString pageUrl = "nfts/avatars/list?skip=0&limit=20";
 	FString avatarName = "Banana";
 	FString collectionName = "CryptoAvatars";
+	FString userWallet = "0x242A5a3f94b2Fdd52Da2cb923214f4C2426a865B";
 	//cryptoAvatars.GetAvatars(licenseType, pageUrl, response);
 	// You can add a callback function to do something with the response 
-	cryptoAvatars.GetAvatarsByCollectionName(licenseType, pageUrl, collectionName, [](FHttpResponsePtr response) {
+	cryptoAvatars.GetUserAvatars(userWallet, pageUrl, [](FHttpResponsePtr response) {
 		// Do something with the response
 		UE_LOG(LogTemp, Display, TEXT("Response: %s"), *response->GetContentAsString());
 		});
