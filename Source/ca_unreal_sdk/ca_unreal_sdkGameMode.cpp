@@ -20,7 +20,7 @@ Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 void Aca_unreal_sdkGameMode::StartPlay() {
 	Super::StartPlay();
 	
-	//PostRequestExample();
+	PostRequestExample();
 	//GetRequestExample();
 }
 
@@ -53,15 +53,15 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	//Request->SetContentAsString(RequestBody);
 	//Request->ProcessRequest();
 
-	//CryptoAvatars cryptoAvatars("$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
-	//FString licenseType = "CC0";
-	//FString pageUrl = "https://api.cryptoavatars.io/v1/collections/total";
-	////cryptoAvatars.GetAvatars(licenseType, pageUrl, response);
-	//// You can add a callback function to do something with the response 
-	//cryptoAvatars.GetAvatars(licenseType, pageUrl, [](FHttpResponsePtr response) {
-	//	// Do something with the response
-	//	UE_LOG(LogTemp, Display, TEXT("Response: %s"), *response->GetContentAsString());
-	//	});
+	CryptoAvatars cryptoAvatars("$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
+	FString licenseType = "CC0";
+	FString pageUrl = "collections/total";
+	//cryptoAvatars.GetAvatars(licenseType, pageUrl, response);
+	// You can add a callback function to do something with the response 
+	cryptoAvatars.GetAvatars(licenseType, pageUrl, [](FHttpResponsePtr response) {
+		// Do something with the response
+		UE_LOG(LogTemp, Display, TEXT("Response: %s"), *response->GetContentAsString());
+		});
 	
 }
 void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
