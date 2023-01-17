@@ -30,6 +30,9 @@ public class CA_SDK : ModuleRules
 				"HTTP",
 				"Json", 
 				"JsonUtilities",
+                "UMG",
+				"Slate",
+				"SlateCore"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

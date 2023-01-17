@@ -8,6 +8,6 @@ public class ca_unreal_sdk : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "VRM4U", "HTTP","Json", "JsonUtilities", "CA_SDK" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "VRM4U", "HTTP","Json", "JsonUtilities", "CA_SDK", "UMG","Slate","SlateCore" });
     }
 }

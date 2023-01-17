@@ -9,6 +9,8 @@
 #include "Components/Image.h"
 #include "Blueprint/UserWidget.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Runtime/UMG/Public/UMG.h"
+#include "Slate.h"
 Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 {
 	// set default pawn class to our Blueprinted character
@@ -21,6 +23,26 @@ Aca_unreal_sdkGameMode::Aca_unreal_sdkGameMode()
 
 void Aca_unreal_sdkGameMode::StartPlay() {
 	Super::StartPlay();
+	// Create Widget
+	//if (WidgetTemplate)
+	//{
+		//UE_LOG(LogTemp, Warning, TEXT("Widget Template is not null"));
+		WidgetTemplate = UAvatarCardPreview::StaticClass();
+		if (!WidgetInstance)
+		{
+			WidgetInstance = Cast<UAvatarCardPreview>(CreateWidget(UGameplayStatics::GetPlayerController(this, 0), WidgetTemplate));
+			WidgetInstance->AddToViewport();
+			WidgetInstance->RemoveFromViewport();
+			UE_LOG(LogTemp, Warning, TEXT("Widget Instance created"));
+		}
+		else {
+			UE_LOG(LogTemp, Error, TEXT("Widget Instance had a previous value"));
+		}
+	//}
+	/*else {
+		UE_LOG(LogTemp, Error, TEXT("Widget Template is null"));
+	}*/
+
 	
 	PostRequestExample();
 	//GetRequestExample();
@@ -82,11 +104,27 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	//}
 	//// Add the widget to the viewport
 	//ImageWidget->AddToViewport();
-	cryptoAvatars.GetAvatarPreviewImage(imageURL,[&Texture](UTexture2D* response) {
-		Texture = response;
+	cryptoAvatars.GetAvatarPreviewImage(imageURL, [this](UTexture2D* response) {
+		if (response)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AvatarTexture Width: %d, Height: %d"), response->GetSizeX(), response->GetSizeY());
+			// Get the Image component
+			UImage* Image = WidgetInstance->AvatarPreviewImage;
+			if (Image)
+			{
+				// Set the brush of the Image component to the UTexture2D
+				Image->SetBrushFromTexture(response);
+			}
+			// Add the widget to the viewport
+			WidgetInstance->AddToViewport();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Error loading image"));
+		}
 		});
-	
 }
+	
 void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
 {
 	TSharedPtr<FJsonObject> ResponseObj;
