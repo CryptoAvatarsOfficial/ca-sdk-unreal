@@ -17,9 +17,9 @@ public:
 	virtual void StartPlay() override;
 	void GetRequestExample();
 	void PostRequestExample();
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-		TSubclassOf<class UAvatarCardPreview> WidgetTemplate;
-	UPROPERTY()
+	UPROPERTY(EditAnyWhere, Category = "UI")
+		TSubclassOf<class UUserWidget> WidgetTemplate;
+	UPROPERTY(VisibleInstanceOnly, Category="Runtime")
 		UAvatarCardPreview* WidgetInstance;
 private:
 	void OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);

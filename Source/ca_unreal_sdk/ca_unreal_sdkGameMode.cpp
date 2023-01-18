@@ -27,12 +27,13 @@ void Aca_unreal_sdkGameMode::StartPlay() {
 	//if (WidgetTemplate)
 	//{
 		//UE_LOG(LogTemp, Warning, TEXT("Widget Template is not null"));
-		WidgetTemplate = UAvatarCardPreview::StaticClass();
 		if (!WidgetInstance)
 		{
-			WidgetInstance = Cast<UAvatarCardPreview>(CreateWidget(UGameplayStatics::GetPlayerController(this, 0), WidgetTemplate));
+			//WidgetInstance = Cast<UAvatarCardPreview>(CreateWidget(UGameplayStatics::GetPlayerController(this, 0), WidgetTemplate));
+			WidgetInstance = Cast<UAvatarCardPreview>(CreateWidget<UAvatarCardPreview>(GetWorld(), UAvatarCardPreview::StaticClass()));
+			
 			WidgetInstance->AddToViewport();
-			WidgetInstance->RemoveFromViewport();
+			//WidgetInstance->RemoveFromViewport();
 			UE_LOG(LogTemp, Warning, TEXT("Widget Instance created"));
 		}
 		else {
@@ -77,7 +78,7 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	//Request->SetContentAsString(RequestBody);
 	//Request->ProcessRequest();
 
-	CryptoAvatars cryptoAvatars("$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
+	//UCryptoAvatars cryptoAvatars("$2b$10$Yaenvbe2pRfadxqZT0vOHet50SX6NEbdSQ5lrqV.M7on2hRKkCC/6");
 	FString licenseType = "CC0";
 	FString pageUrl = "nfts/avatars/list?skip=0&limit=20";
 	FString avatarName = "Banana";
@@ -104,45 +105,51 @@ void Aca_unreal_sdkGameMode::PostRequestExample() {
 	//}
 	//// Add the widget to the viewport
 	//ImageWidget->AddToViewport();
-	cryptoAvatars.GetAvatarPreviewImage(imageURL, [this](UTexture2D* response) {
-		if (response)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("AvatarTexture Width: %d, Height: %d"), response->GetSizeX(), response->GetSizeY());
-			// Get the Image component
-			UImage* Image = WidgetInstance->AvatarPreviewImage;
-			if (Image)
-			{
-				// Set the brush of the Image component to the UTexture2D
-				Image->SetBrushFromTexture(response);
-			}
-			// Add the widget to the viewport
-			WidgetInstance->AddToViewport();
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Error loading image"));
-		}
-		});
+//	cryptoAvatars.GetAvatarPreviewImage(imageURL, [this](UTexture2D* response) {
+//		if (response)
+//		{
+//			UE_LOG(LogTemp, Warning, TEXT("AvatarTexture Width: %d, Height: %d"), response->GetSizeX(), response->GetSizeY());
+//			// Get the Image component
+//			UImage* img = NewObject<UImage>(UImage::StaticClass());
+//			img->SetVisibility(ESlateVisibility::Visible);
+//			UTexture2DDynamic* yourTexture = UTexture2DDynamic::Create(response->GetSizeX(), response->GetSizeY());
+//			yourTexture->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+//			yourTexture->LODGroup = TextureGroup::TEXTUREGROUP_UI;
+//			yourTexture->UpdateResource();
+//			//WidgetInstance->SetAvatarImage(yourTexture);
+//			if (img)
+//			{
+//				// Set the brush of the Image component to the UTexture2D
+//				img->SetBrushFromTexture(response);
+//			}
+//			// Add the widget to the viewport
+//			WidgetInstance->AddToViewport();
+//		}
+//		else
+//		{
+//			UE_LOG(LogTemp, Error, TEXT("Error loading image"));
+//		}
+//		});
 }
 	
 void Aca_unreal_sdkGameMode::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
 {
-	TSharedPtr<FJsonObject> ResponseObj;
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-	FJsonSerializer::Deserialize(Reader, ResponseObj);
-	FNftsArray nfts;
-	UE_LOG(LogTemp, Display, TEXT("Response %s"), *Response->GetContentAsString());
-	TArray<TSharedPtr<FJsonValue>> JsonParsed;
-	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(*Response->GetContentAsString());
-	
-	TArray<TSharedPtr<FJsonValue>> nftsArray = ResponseObj->GetArrayField("nfts");
-	
-	for (int i = 0; i < nftsArray.Num(); i++) {
-		FNft nft;
-		FJsonObjectConverter::JsonObjectToUStruct(nftsArray[i]->AsObject().ToSharedRef(), &nft, 0, 0);
-		nfts.nfts.Add(nft);
-		UE_LOG(LogTemp, Display, TEXT("Response %s"), *nft.metadata.name);
-	}
+	//TSharedPtr<FJsonObject> ResponseObj;
+	//TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	//FJsonSerializer::Deserialize(Reader, ResponseObj);
+	//FNftsArray nfts;
+	//UE_LOG(LogTemp, Display, TEXT("Response %s"), *Response->GetContentAsString());
+	//TArray<TSharedPtr<FJsonValue>> JsonParsed;
+	//const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(*Response->GetContentAsString());
+	//
+	//TArray<TSharedPtr<FJsonValue>> nftsArray = ResponseObj->GetArrayField("nfts");
+	//
+	//for (int i = 0; i < nftsArray.Num(); i++) {
+	//	FNft nft;
+	//	FJsonObjectConverter::JsonObjectToUStruct(nftsArray[i]->AsObject().ToSharedRef(), &nft, 0, 0);
+	//	nfts.nfts.Add(nft);
+	//	UE_LOG(LogTemp, Display, TEXT("Response %s"), *nft.metadata.name);
+	//}
 	
 	/*for (int32 i = 0; i < nftsArray.Num(); ++i) {
 		nfts.nfts[i] = nftsArray[i];
