@@ -32,7 +32,8 @@ public class CA_SDK : ModuleRules
 				"JsonUtilities",
                 "UMG",
 				"Slate",
-				"SlateCore"
+				"SlateCore",
+                "VRM4ULoader",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
