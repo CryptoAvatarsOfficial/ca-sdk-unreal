@@ -34,6 +34,7 @@ public class CA_SDK : ModuleRules
 				"Slate",
 				"SlateCore",
                 "VRM4ULoader",
+                "VRM4UImporter",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
