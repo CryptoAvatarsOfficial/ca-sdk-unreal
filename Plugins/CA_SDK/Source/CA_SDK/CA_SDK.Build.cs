@@ -26,15 +26,16 @@ public class CA_SDK : ModuleRules
 			new string[]
 			{
 				"Core",
-                "VRM4U", 
-				"HTTP",
-				"Json", 
+                "VRM4ULoader",
+                "VRM4UImporter",
+                "VRM4U",
+                "HTTP",
+                "Json", 
 				"JsonUtilities",
                 "UMG",
 				"Slate",
 				"SlateCore",
-                "VRM4ULoader",
-                "VRM4UImporter",
+               
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -47,6 +48,7 @@ public class CA_SDK : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+                "VRM4UImporter",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
