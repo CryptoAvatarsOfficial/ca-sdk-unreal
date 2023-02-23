@@ -72,3 +72,7 @@ Plugins/*/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+/Content/Showcase
+/Builds/Windows/ca_unreal_sdk
+/Builds/Windows/DemoCA-SDK.zip
+/Builds/Windows
