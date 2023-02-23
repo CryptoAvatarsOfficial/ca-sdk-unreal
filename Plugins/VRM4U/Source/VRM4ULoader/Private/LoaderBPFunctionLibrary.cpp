@@ -283,16 +283,16 @@ static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVr
 bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeletalMeshComponent *displaySkeleton) {
 
 	if (targetHumanoidSkeleton == nullptr) return false;
-	if (targetHumanoidSkeleton->SkeletalMesh == nullptr) return false;
+	if (VRMGetSkinnedAsset(targetHumanoidSkeleton) == nullptr) return false;
 
 	if (displaySkeleton == nullptr) return false;
-	if (displaySkeleton->SkeletalMesh == nullptr) return false;
+	if (VRMGetSkinnedAsset(displaySkeleton) == nullptr) return false;
 
 	// no meta. use default name.
 	//if (meta == nullptr) return false;
 
-	ReTransformHumanoidBone(VRMGetSkeleton(targetHumanoidSkeleton->SkeletalMesh), meta, VRMGetSkeleton(displaySkeleton->SkeletalMesh));
-	auto &sk = targetHumanoidSkeleton->SkeletalMesh;
+	ReTransformHumanoidBone(VRMGetSkeleton( VRMGetSkinnedAsset(targetHumanoidSkeleton) ), meta, VRMGetSkeleton( VRMGetSkinnedAsset(displaySkeleton) ));
+	auto *sk = VRMGetSkinnedAsset(targetHumanoidSkeleton);
 	auto *k = VRMGetSkeleton(sk);
 
 	VRMSetRefSkeleton(sk, k->GetReferenceSkeleton());
@@ -1312,8 +1312,8 @@ void ULoaderBPFunctionLibrary::VRMGenerateEpicSkeletonToHumanoidIKRig(USkeletalM
 					break;
 				}
 			}
-			VRMAddRetargetChain(rigcon, TEXT("leftEye"), TEXT(""), TEXT(""));
-			VRMAddRetargetChain(rigcon, TEXT("rightEye"), TEXT(""), TEXT(""));
+			//VRMAddRetargetChain(rigcon, TEXT("leftEye"), NAME_None, NAME_None);
+			//VRMAddRetargetChain(rigcon, TEXT("rightEye"), NAME_None, NAME_None);
 		}
 
 		{

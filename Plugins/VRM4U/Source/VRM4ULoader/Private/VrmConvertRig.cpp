@@ -484,10 +484,13 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList) {
 							p = rSk.GetParentIndex(p);
 							if (p <= 0) break;
 
-							// spine
-							targetBone[cc.Num() - 2] = rSk.GetBoneName(p);
+							int p2 = rSk.GetParentIndex(p);
+							if (p2 <= 0) break;
 
 							// pelvis
+							targetBone[cc.Num() - 2] = rSk.GetBoneName(p2);
+
+							// spine
 							targetBone[cc.Num() - 3] = rSk.GetBoneName(p);
 						}
 					}

@@ -259,8 +259,8 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 	}
 
 	// ref pose
-	const auto &dstRefSkeletonTransform = VRMGetRefSkeleton(GetSkelMeshComponent()->SkeletalMesh).GetRefBonePose();
-	const auto &srcRefSkeletonTransform = VRMGetRefSkeleton(srcAsSkinnedMeshComp->SkeletalMesh).GetRefBonePose();
+	const auto &dstRefSkeletonTransform = VRMGetRefSkeleton( VRMGetSkinnedAsset(GetSkelMeshComponent()) ).GetRefBonePose();
+	const auto &srcRefSkeletonTransform = VRMGetRefSkeleton( VRMGetSkinnedAsset(srcAsSkinnedMeshComp) ).GetRefBonePose();
 
 	auto &pose = Output.Pose;
 
@@ -350,7 +350,7 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 				while (p != INDEX_NONE) {
 
 					HipHeight += dstRefSkeletonTransform[p].GetLocation().Z;
-					p = VRMGetRefSkeleton(GetSkelMeshComponent()->SkeletalMesh).GetParentIndex(p);
+					p = VRMGetRefSkeleton( VRMGetSkinnedAsset(GetSkelMeshComponent()) ).GetParentIndex(p);
 				}
 				//FVector diff = srcCurrentTrans.GetLocation() - srcRefTrans.GetLocation();
 				//FVector scale = dstRefTrans.GetLocation() / srcRefTrans.GetLocation();
@@ -528,6 +528,48 @@ void UVrmAnimInstanceCopy::NativePostEvaluateAnimation() {
 void UVrmAnimInstanceCopy::NativeUninitializeAnimation() {
 	if (GetOwningComponent()) {
 		GetOwningComponent()->ClearMorphTargets();
+	}
+
+	if (!SrcSkeletalMeshComponent && bUseAttachedParent)
+	{
+		USkeletalMeshComponent* TargetMesh = GetOwningComponent();
+
+		// Walk up the attachment chain until we find a skeletal mesh component
+		USkeletalMeshComponent* ParentMeshComponent = nullptr;
+		for (USceneComponent* AttachParentComp = TargetMesh->GetAttachParent(); AttachParentComp != nullptr; AttachParentComp = AttachParentComp->GetAttachParent())
+		{
+			ParentMeshComponent = Cast<USkeletalMeshComponent>(AttachParentComp);
+			if (ParentMeshComponent)
+			{
+				break;
+			}
+		}
+		if (ParentMeshComponent == nullptr) {
+			AActor *targetActor = nullptr;
+			AActor *myActor = TargetMesh->GetOwner();
+			for (USceneComponent* AttachParentComp = TargetMesh->GetAttachParent(); AttachParentComp != nullptr; AttachParentComp = AttachParentComp->GetAttachParent()) {
+				targetActor = AttachParentComp->GetOwner();
+				if (targetActor != myActor) {
+					break;
+				}
+				targetActor = nullptr;
+			}
+			if (targetActor) {
+				TArray<USkeletalMeshComponent*> c;
+				targetActor->GetComponents<USkeletalMeshComponent>(c);
+				if (c.IsValidIndex(0)) {
+					ParentMeshComponent = c[0];
+				}
+			}
+		}
+
+		if (ParentMeshComponent)
+		{
+			SrcSkeletalMeshComponent = ParentMeshComponent;
+		}
+	}
+	if (SrcAsSkinnedMeshComponent == nullptr) {
+		SrcAsSkinnedMeshComponent = SrcSkeletalMeshComponent;
 	}
 }
 void UVrmAnimInstanceCopy::NativeBeginPlay() {

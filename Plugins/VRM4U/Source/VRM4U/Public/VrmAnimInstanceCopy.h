@@ -55,6 +55,10 @@ class VRM4U_API UVrmAnimInstanceCopy : public UAnimInstance
 	GENERATED_UCLASS_BODY()
 
 public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Rendering, meta = (NeverAsPin))
+	bool bUseAttachedParent = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	USkeletalMeshComponent *SrcSkeletalMeshComponent;
 

@@ -10,6 +10,13 @@
 #include "Common/UdpSocketReceiver.h"
 #include "Sockets.h"
 #include "Common/UdpSocketBuilder.h"
+#include "Misc/EngineVersionComparison.h"
+
+
+#if	UE_VERSION_OLDER_THAN(4,26,0)
+#else
+#include "Containers/RingBuffer.h"
+#endif
 
 #include "VrmMocopiReceiver.generated.h"
 
@@ -28,6 +35,9 @@ struct FStructMocopiData{
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int FrameNo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int Time;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, EditFixedSize)
 	TArray<FTransform> MocopiTransformWorld;
@@ -86,9 +96,21 @@ public:
 UCLASS(BlueprintType)
 class VRM4UCAPTURE_API UVrmMocopiReceiver : public UObject
 {
+	GENERATED_UCLASS_BODY()
+
+	int BufferNum = 10;
+	int currentFrameNo = 0;
+	int currentTime = 0;
+
+	mutable FCriticalSection BufferCS;
+
 	TUniquePtr<FMocopiReceiverProxy> ReceiverProxy;
 
-	GENERATED_UCLASS_BODY()
+#if	UE_VERSION_OLDER_THAN(4,26,0)
+	TArray<FStructMocopiData> MocopiReceiveBuffer;
+#else
+	TRingBuffer<FStructMocopiData> MocopiReceiveBuffer;
+#endif
 
 public:
 
@@ -103,14 +125,29 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
 	bool SetAddress(const FString& ReceiveIPAddress, int32 Port);
 
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	void SetBufferNum(int32 Num = 10);
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
-	//TMap<int, FStructRevData> mapdata;
+	void OnPacketReceived(FStructMocopiData data);
+
+	void PacketBroadcast();
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVrmMocopiReceiverDelegate, FStructMocopiData, data);
 
 	UPROPERTY(BlueprintAssignable, Category = "VRM4U")
 	FVrmMocopiReceiverDelegate OnReceived;
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	void GetNextFrameData(FStructMocopiData &data, bool &bEnable, bool &bUpdate);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	void GetLatestFrameData(FStructMocopiData &data, bool &bEnable, bool &bUpdate);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	void GetCurrentTime(int& FrameNo, int& Time) {
+		FrameNo = currentFrameNo;
+		Time = currentTime;
+	}
 
 protected:
 	virtual void BeginDestroy() override;

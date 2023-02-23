@@ -228,6 +228,41 @@ void VRMSetUseLegacyMeshDerivedDataKey(T* t, bool b) {
 VRM4U_API void VRMAddRetargetChain(class UIKRigController* con, FName name, FName begin, FName end);
 #endif
 
+
+//template<typename T>
+FORCEINLINE  USkeletalMesh *VRMGetSkinnedAsset(USkeletalMeshComponent* t) {
+#if	UE_VERSION_OLDER_THAN(5,1,0)
+	return t->SkeletalMesh;
+#else
+	return (t->GetSkeletalMeshAsset());
+#endif
+}
+FORCEINLINE  USkeletalMesh *VRMGetSkinnedAsset(TWeakObjectPtr<USkeletalMeshComponent> t) {
+#if	UE_VERSION_OLDER_THAN(5,1,0)
+	return t->SkeletalMesh;
+#else
+	return (t->GetSkeletalMeshAsset());
+#endif
+}
+
+//template<>
+FORCEINLINE  USkeletalMesh *VRMGetSkinnedAsset(USkinnedMeshComponent* t) {
+#if	UE_VERSION_OLDER_THAN(5,1,0)
+	return t->SkeletalMesh;
+#else
+	return Cast<USkeletalMesh>(t->GetSkinnedAsset());
+#endif
+}
+//template<>
+FORCEINLINE  USkeletalMesh *VRMGetSkinnedAsset(const USkinnedMeshComponent* t) {
+#if	UE_VERSION_OLDER_THAN(5,1,0)
+	return t->SkeletalMesh;
+#else
+	return Cast<USkeletalMesh>(t->GetSkinnedAsset());
+#endif
+}
+
+
 // 
 //
 

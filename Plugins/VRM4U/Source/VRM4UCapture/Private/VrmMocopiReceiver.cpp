@@ -12,6 +12,7 @@
 //
 // 
 
+
 FMocopiReceiverProxy::FMocopiReceiverProxy(UVrmMocopiReceiver * InReceiver):
 	Receiver(InReceiver){
 	FIPv4Address::Parse("127.0.0.1", ReceiveIPAddress);
@@ -121,14 +122,16 @@ void FMocopiReceiverProxy::OnPacketReceived(const FArrayReaderPtr& InData, const
 		//TArray<LocalStructRawData> data;
 
 		TArray<FTransform> transformLocal;
-		TArray <FTransform> transform;
+		TArray <FTransform> transformWorld;
 		TArray <FTransform> transformVrmLocal;
+		TArray <FTransform> transformBvhLocal;
 
 
 		LocalStructTransData() {
-			transform.SetNum(MocopiData::BoneNum);
+			transformWorld.SetNum(MocopiData::BoneNum);
 			transformLocal.SetNum(MocopiData::BoneNum);
 			transformVrmLocal.SetNum(MocopiData::BoneNum);
+			transformBvhLocal.SetNum(MocopiData::BoneNum);
 			//data.SetNum(MocopiData::BoneNum);
 		}
 	};
@@ -143,6 +146,11 @@ void FMocopiReceiverProxy::OnPacketReceived(const FArrayReaderPtr& InData, const
 		's', 'k', 'd', 'f',
 	};
 
+	const char FIELD_BTRS[] = {
+		'b', 't', 'r', 's',
+	};
+
+
 	const char FIELD_TRAN[] = {
 		't', 'r', 'a', 'n',
 	};
@@ -153,6 +161,14 @@ void FMocopiReceiverProxy::OnPacketReceived(const FArrayReaderPtr& InData, const
 
 	const char FIELD_FRAM[] = {
 		'f', 'r', 'a', 'm',
+	};
+
+	const char FIELD_FNUM[] = {
+		'f', 'n', 'u', 'm',
+	};
+
+	const char FIELD_TIME[] = {
+		't', 'i', 'm', 'e',
 	};
 
 	const int BoneChain[] = {
@@ -168,7 +184,11 @@ void FMocopiReceiverProxy::OnPacketReceived(const FArrayReaderPtr& InData, const
 		23, 24, 25,
 	};
 
-	auto GetValue = [&](int cur, const char field[4]) {
+	auto GetValue = [&](uint8*& pData, uint32_t &length, int cur, const char field[4]) {
+
+		if (cur < 4) {
+			return false;
+		}
 		{
 			int t = 0;
 			for (t = 0; t < 4; ++t) {
@@ -177,27 +197,25 @@ void FMocopiReceiverProxy::OnPacketReceived(const FArrayReaderPtr& InData, const
 				}
 			}
 			if (t == 4) {
-				return (RecvDataSet.GetData() + cur + 4);
+				pData = (RecvDataSet.GetData() + cur + 4);
+				length = *reinterpret_cast<uint32*>((RecvDataSet.GetData() + cur - 4));
+				return true;
 			}
 		}
-		return (uint8*)nullptr;
+		pData = nullptr;
+		length = 0;
+		return false;
 	};
 
-
-	int32* frame = nullptr;
-	float* TransformData = nullptr;
-	uint16* boneid = nullptr;
-	float ff[7] = {};
-
-
+	/*
 	for (int i = RecvDataSet.Num() - 4; i >= 8; --i) {
 		if (isalpha(RecvDataSet.GetData()[i]) == false) {
 			continue;
 		}
 
+		uint32 length = 0;
 		uint8* p = nullptr;
-		p = GetValue(i, FIELD_FRAM);
-		if (p) {
+		if (GetValue(p, length, i, FIELD_FRAM)){
 
 			// p == value
 			// p-4 == field
@@ -219,143 +237,207 @@ void FMocopiReceiverProxy::OnPacketReceived(const FArrayReaderPtr& InData, const
 
 			}
 		}
-	}
+	}*/
 
+	bool bUpdateData = false;
+	for (int packetNo = 0; packetNo < 10; ++packetNo) {
 
-	for (int i = 0; i < RecvDataSet.Num() - 4; ++i) {
-		if (isalpha(RecvDataSet.GetData()[i]) == false) {
-			continue;
-		}
-		uint8* p = nullptr;
-
-		p = GetValue(i, FIELD_BNID);
-		if (p) {
-			boneid = reinterpret_cast<uint16*>(p);
-		}
-
-		p = GetValue(i, FIELD_TRAN);
-		if (p) {
-			TransformData = reinterpret_cast<float*>(p);
-		}
-
-		p = GetValue(i, FIELD_FRAM);
-		if (p) {
-			frame = reinterpret_cast<int32*>(p);
-		}
-
-		/*
+		int32 frame = -1;
+		int32 time = -1;
 		{
-			int t = 0;
-			for (t = 0; t < 4; ++t) {
-				if (isalpha((RecvDataSet.GetData()[i + t])) == false) {
-					break;
+			bool bFindFieldSkdf = false;
+			bool bFindFieldBtrs = false;
+			bool bFindFieldFram = false;
+
+			float* TransformData = nullptr;
+			uint16* boneid = nullptr;
+
+			int i = 0;
+			for (i = 0; i < RecvDataSet.Num() - 4; ++i) {
+				if (isalpha(RecvDataSet.GetData()[i]) == false) {
+					continue;
 				}
-			}
-			if (t == 4) {
-				UE_LOG(LogVRM4UCapture, Verbose, TEXT("recv '%c%c%c%c' "),
-					*((char*)(RecvDataSet.GetData()) + i),
-					*((char*)(RecvDataSet.GetData()) + i+1),
-					*((char*)(RecvDataSet.GetData()) + i+2),
-					*((char*)(RecvDataSet.GetData()) + i+3)
-					);
-			}
-		}
-		*/
+				uint32 length = 0;
+				uint8* p = nullptr;
 
-		if (boneid && TransformData) {
-			// mocopi
-			{
-				LocalStructRawData st;
+				if (GetValue(p, length, i, FIELD_SKDF)) {
+					//UE_LOG(LogVRM4UCapture, Verbose, TEXT("skdf  %d"), bFindFieldFram);
+					bFindFieldSkdf = true;
+				}
+				
 
-				st.rot = FQuat(-TransformData[0], -TransformData[1], TransformData[2], TransformData[3]);
-				if (*boneid == 0) {
-					st.rot = FRotator(0, 0, -90).Quaternion() * st.rot;
+				if (bFindFieldFram == false) {
+					if (GetValue(p, length, i, FIELD_FRAM)) {
+						bFindFieldFram = true;
+					}
+					continue;
 				}
 
-				st.pos.Set(TransformData[4], TransformData[5], -TransformData[6]);
-				st.pos *= 100.f;
+				/*
+				{
+					int t = 0;
+					for (t = 0; t < 4; ++t) {
+						if (isalpha((RecvDataSet.GetData()[i + t])) == false) {
+							break;
+						}
+					}
+					if (t == 4) {
+						UE_LOG(LogVRM4UCapture, Verbose, TEXT("recv '%c%c%c%c' "),
+							*((char*)(RecvDataSet.GetData()) + i),
+							*((char*)(RecvDataSet.GetData()) + i+1),
+							*((char*)(RecvDataSet.GetData()) + i+2),
+							*((char*)(RecvDataSet.GetData()) + i+3)
+							);
+					}
+				}
+				*/
 
-				d.transformLocal[*boneid] = FTransform(st.rot, st.pos);
+				if (GetValue(p, length, i, FIELD_FNUM)) {
+					frame = *reinterpret_cast<int32*>(p);
+				}
+
+				if (GetValue(p, length, i, FIELD_TIME)) {
+					time = *reinterpret_cast<int32*>(p);
+				}
+
+				if (frame < 0) continue;
+
+				if (bFindFieldBtrs == false) {
+					if (GetValue(p, length, i, FIELD_BTRS)) {
+						bFindFieldBtrs = true;
+					}
+					continue;
+				}
+
+
+				if (GetValue(p, length, i, FIELD_BNID)) {
+					boneid = reinterpret_cast<uint16*>(p);
+				}
+
+				if (GetValue(p, length, i, FIELD_TRAN)) {
+					TransformData = reinterpret_cast<float*>(p);
+				}
+
+				if (boneid && TransformData) {
+					// mocopi
+					{
+						LocalStructRawData st;
+
+						st.rot = FQuat(-TransformData[0], -TransformData[1], TransformData[2], TransformData[3]);
+						if (*boneid == 0) {
+							st.rot = FRotator(0, 0, -90).Quaternion() * st.rot;
+						}
+
+						st.pos.Set(TransformData[4], TransformData[5], -TransformData[6]);
+						st.pos *= 100.f;
+
+						d.transformLocal[*boneid] = FTransform(st.rot, st.pos);
+					}
+
+					// vrm
+					{
+						LocalStructRawData st;
+
+						d.transformVrmLocal[*boneid] = FTransform(st.rot, st.pos);
+						st.rot = FQuat(-TransformData[0], -TransformData[1], TransformData[2], TransformData[3]);
+						st.rot = FRotator(0, 0, -90).Quaternion() * st.rot * FRotator(0, 0, -90).Quaternion().Inverse();
+
+						st.pos.Set(TransformData[4], TransformData[6], TransformData[5]);
+						st.pos *= 100.f;
+
+						d.transformVrmLocal[*boneid] = FTransform(st.rot, st.pos);
+					}
+
+					if (*boneid == MocopiData::BoneNum-1) {
+
+						// remove read data
+						FMemory::Memmove(RecvDataSet.GetData(), RecvDataSet.GetData() + i, RecvDataSet.Num() - i);
+						RecvDataSet.SetNum(RecvDataSet.Num() - i);
+
+						break;
+					}
+
+					boneid = nullptr;
+					TransformData = nullptr;
+				}
+			}// data loop
+			if (bFindFieldSkdf) {
+				continue;
 			}
+		} // packet loop
 
-			// vrm
-			{
-				LocalStructRawData st;
 
-				d.transformVrmLocal[*boneid] = FTransform(st.rot, st.pos);
-				st.rot = FQuat(-TransformData[0], -TransformData[1], TransformData[2], TransformData[3]);
-				st.rot = FRotator(0, 0, -90).Quaternion() * st.rot * FRotator(0, 0, -90).Quaternion().Inverse();
+		// no packet
+		if (d.transformLocal.Num() != MocopiData::BoneNum) break;
 
-				st.pos.Set(TransformData[4], TransformData[6], TransformData[5]);
-				st.pos *= 100.f;
+		d.transformWorld = d.transformLocal;
 
-				d.transformVrmLocal[*boneid] = FTransform(st.rot, st.pos);
+		{
+			auto v = d.transformWorld[0].GetLocation();
+			d.transformWorld[0].SetLocation(FVector(v.X, v.Z, v.Y));
+		}
+
+		for (int i = 1; i < MocopiData::BoneNum; ++i) {
+			int parent = BoneChain[i];
+
+			auto r1 = d.transformWorld[parent].GetRotation();
+			auto p1 = d.transformWorld[parent].GetLocation();
+
+			FTransform::Multiply(&d.transformWorld[i], &d.transformLocal[i], &d.transformWorld[parent]);
+		}
+
+		FStructMocopiData md;
+		if (frame>=0 && time>=0) {
+			md.FrameNo = frame;
+			md.Time = time;
+		}
+		md.MocopiTransformWorld = d.transformWorld;
+		md.MocopiTransformLocal = d.transformLocal;
+		md.VrmTransformLocal = d.transformVrmLocal;
+
+		{
+			TMap<FString, int> BoneIdList = {
+			{"hips",				0},
+			{"leftUpperLeg",		19},
+			{"rightUpperLeg",		23},
+			{"leftLowerLeg",		20},
+			{"rightLowerLeg",		24},
+			{"leftFoot",			21},
+			{"rightFoot",			25},
+			{"spine",				3},	//
+			{"chest",				6},	//
+			{"upperChest",			7},	//
+			{"neck",				8}, //
+			{"head",				9},
+			{"leftShoulder",		11},
+			{"rightShoulder",		15},
+			{"leftUpperArm",		12},
+			{"rightUpperArm",		16},
+			{"leftLowerArm",		13},
+			{"rightLowerArm",		17},
+			{"leftHand",			14},
+			{"rightHand",			18},
+			{"leftToes",			22},
+			{"rightToes",			26},
+			};
+
+			for (auto& b : BoneIdList) {
+				md.VrmTransformBoneList.Add(b.Key, d.transformVrmLocal[b.Value]);
 			}
-
-			boneid = nullptr;
-			TransformData = nullptr;
 		}
-	}
-	if (d.transformLocal.Num() != MocopiData::BoneNum) return;
 
-	d.transform = d.transformLocal;
-
-
-	for (int i = 1; i < MocopiData::BoneNum; ++i) {
-		int parent = BoneChain[i];
-
-		auto r1 = d.transform[parent].GetRotation();
-		auto p1 = d.transform[parent].GetLocation();
-
-		FTransform::Multiply(&d.transform[i], &d.transformLocal[i], &d.transform[parent]);
-	}
-	FStructMocopiData md;
-	if (frame) {
-		md.FrameNo = *frame;
-	}
-	md.MocopiTransformWorld = d.transform;
-	md.MocopiTransformLocal = d.transformLocal;
-
-	{
-		TMap<FString, int> BoneIdList = {
-		{"hips",				0},
-		{"leftUpperLeg",		19},
-		{"rightUpperLeg",		23},
-		{"leftLowerLeg",		20},
-		{"rightLowerLeg",		24},
-		{"leftFoot",			21},
-		{"rightFoot",			25},
-		{"spine",				3},	//
-		{"chest",				6},	//
-		{"upperChest",			7},	//
-		{"neck",				8}, //
-		{"head",				9},
-		{"leftShoulder",		11},
-		{"rightShoulder",		15},
-		{"leftUpperArm",		12},
-		{"rightUpperArm",		16},
-		{"leftLowerArm",		13},
-		{"rightLowerArm",		17},
-		{"leftHand",			14},
-		{"rightHand",			18},
-		{"leftToes",			22},
-		{"rightToes",			26},
-		};
-
-		for (auto& b : BoneIdList) {
-			md.VrmTransformBoneList.Add(b.Key, d.transformVrmLocal[b.Value]);
+		if (Receiver) {
+			Receiver->OnPacketReceived(md);
+			bUpdateData = true;
 		}
+	}// packet loop
+
+	if (bUpdateData && Receiver) {
+		Receiver->PacketBroadcast();
 	}
 
-
-
-	if (Receiver) {
-		Receiver->OnReceived.Broadcast(md);
-	}
 #ifdef PLATFORM_LITTLE_ENDIAN
 #endif
-
-
 }
 
 
@@ -366,6 +448,7 @@ void FMocopiReceiverProxy::OnPacketReceived(const FArrayReaderPtr& InData, const
 UVrmMocopiReceiver::UVrmMocopiReceiver(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer), ReceiverProxy(MakeUnique<FMocopiReceiverProxy>(this))
 {
+	MocopiReceiveBuffer.Reserve(BufferNum);
 }
 
 void UVrmMocopiReceiver::BeginDestroy() {
@@ -389,4 +472,84 @@ void UVrmMocopiReceiver::Listen() {
 	ReceiverProxy->Listen();
 }
 
+
+void UVrmMocopiReceiver::SetBufferNum(int32 Num) {
+	FScopeLock ScopeLock(&BufferCS);
+	Num = FMath::Max(Num, 1);
+	BufferNum = Num;
+	MocopiReceiveBuffer.Reserve(BufferNum);
+}
+
+
+void UVrmMocopiReceiver::GetNextFrameData(FStructMocopiData &data, bool &bEnable, bool &bUpdate){
+	bEnable = false;
+	bUpdate = false;
+
+	FScopeLock ScopeLock(&BufferCS);
+
+	if (MocopiReceiveBuffer.Num() <= 0) {
+		return;
+	}
+
+	if (bEnable == false) {
+		for (int i = MocopiReceiveBuffer.Num() - 2; i >= 0; --i) {
+			if (MocopiReceiveBuffer[i].FrameNo == currentFrameNo) {
+				data = MocopiReceiveBuffer[i + 1];
+				bEnable = true;
+				break;
+			}
+		}
+		if (bEnable == false) {
+			data = MocopiReceiveBuffer.Last();
+		}
+	}
+
+	if (data.FrameNo != currentFrameNo) {
+		bUpdate = true;
+	}
+	currentFrameNo = data.FrameNo;
+	currentTime = data.Time;
+	bEnable = true;
+}
+
+void UVrmMocopiReceiver::GetLatestFrameData(FStructMocopiData &data, bool &bEnable, bool &bUpdate){
+	bEnable = false;
+	bUpdate = false;
+
+	FScopeLock ScopeLock(&BufferCS);
+
+	if (MocopiReceiveBuffer.Num() <= 0) {
+		return;
+	}
+	data = MocopiReceiveBuffer.Last();
+
+	if (data.FrameNo != currentFrameNo) {
+		bUpdate = true;
+	}
+	currentFrameNo = data.FrameNo;
+	currentTime = data.Time;
+	bEnable = true;
+
+}
+
+void UVrmMocopiReceiver::PacketBroadcast() {
+	FScopeLock ScopeLock(&BufferCS);
+	OnReceived.Broadcast(MocopiReceiveBuffer.Last());
+}
+
+void UVrmMocopiReceiver::OnPacketReceived(FStructMocopiData data) {
+	FScopeLock ScopeLock(&BufferCS);
+
+	while (MocopiReceiveBuffer.Num() >= BufferNum - 1) {
+		if (MocopiReceiveBuffer.Num()  == 0) {
+			break;
+		}
+#if	UE_VERSION_OLDER_THAN(4,26,0)
+		MocopiReceiveBuffer.RemoveAt(0);
+#else
+		MocopiReceiveBuffer.PopFront();
+#endif
+	}
+	MocopiReceiveBuffer.Add(data);
+}
 
