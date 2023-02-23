@@ -27,7 +27,6 @@ public class CA_SDK : ModuleRules
 			{
 				"Core",
                 "VRM4ULoader",
-                "VRM4UImporter",
                 "VRM4U",
                 "HTTP",
                 "Json", 
@@ -48,7 +47,6 @@ public class CA_SDK : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-                "VRM4UImporter",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
