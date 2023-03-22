@@ -22,15 +22,11 @@ struct VRM4U_API FAnimNode_VrmRetargetFromMannequin : public FAnimNode_SkeletalC
 {
 	GENERATED_USTRUCT_BODY()
 
-	/* If SourceMeshComponent is not valid, and if this is true, it will look for attached parent as a source */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Skeleton, meta = (NeverAsPin))
-	bool bUseAttachedParent = true;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinShownByDefault))
-	TWeakObjectPtr<USkeletalMeshComponent> srcMannequinMesh= nullptr;
+	const USkinnedMeshComponent* srcMannequinMesh= nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinHiddenByDefault))
-	UVrmMetaObject *VrmMetaObject = nullptr;
+	const UVrmMetaObject *VrmMetaObject = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
 	bool bIgnoreCenterLocation = false;
@@ -42,14 +38,14 @@ struct VRM4U_API FAnimNode_VrmRetargetFromMannequin : public FAnimNode_SkeletalC
 	FVector CenterLocationOffset = { 0.0f, 0.0f, 0.0f }; // FVector(1.0f, 1.0f, 1.0f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
-	UVrmMetaObject *MannequinVrmMetaObject = nullptr;
+	const UVrmMetaObject* MannequinVrmMetaObject = nullptr;
 
 	FAnimNode_VrmRetargetFromMannequin();
 
 	UPROPERTY()
-	USkeletalMesh *srcSkeletalMesh = nullptr;
+	class USkeletalMesh* srcSkeletalMesh = nullptr;
 	UPROPERTY()
-	USkeletalMesh *dstSkeletalMesh = nullptr;
+	class USkeletalMesh* dstSkeletalMesh = nullptr;
 
 	TArray<FTransform> srcRefSkeletonCompTransform;
 	TArray<FTransform> dstRefSkeletonCompTransform;
@@ -75,8 +71,6 @@ struct VRM4U_API FAnimNode_VrmRetargetFromMannequin : public FAnimNode_SkeletalC
 	virtual void ResetDynamics(ETeleportType InTeleportType) override;
 #endif
 
-	virtual bool HasPreUpdate() const override { return true; }
-	virtual void PreUpdate(const UAnimInstance* InAnimInstance) override;
 	virtual void UpdateInternal(const FAnimationUpdateContext& Context)override;
 	// End of FAnimNode_SkeletalControlBase interface
 

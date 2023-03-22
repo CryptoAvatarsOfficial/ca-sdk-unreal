@@ -173,11 +173,11 @@ void UVrmBPFunctionLibrary::VRMInitAnim(USkeletalMeshComponent *target) {
 void UVrmBPFunctionLibrary::VRMUpdateRefPose(USkeletalMeshComponent* target, bool bForceAlignGlobal, bool bForceUE4Humanoid) {
 #if WITH_EDITOR
 	if (target == nullptr) return;
-	if (VRMGetSkinnedAsset(target) == nullptr) return;
+	if (target->SkeletalMesh == nullptr) return;
 
 	{
-		auto *sk = VRMGetSkinnedAsset(target);
-		auto *k = VRMGetSkeleton( VRMGetSkinnedAsset(target) );
+		auto &sk = target->SkeletalMesh;
+		auto *k = VRMGetSkeleton(target->SkeletalMesh);
 
 #if	UE_VERSION_OLDER_THAN(4,23,0)
 		const auto &transTable = target->BoneSpaceTransforms;
@@ -1541,8 +1541,8 @@ bool UVrmBPFunctionLibrary::VRMBakeAnim(const USkeletalMeshComponent* skc, const
 		AssetFileName = AssetFileName.Replace(TEXT("/"), TEXT(""));
 	}
 
-	USkeletalMesh* sk = VRMGetSkinnedAsset(skc);
-	USkeleton* k = VRMGetSkeleton( VRMGetSkinnedAsset(skc) );
+	USkeletalMesh* sk = skc->SkeletalMesh;
+	USkeleton* k = VRMGetSkeleton(skc->SkeletalMesh);
 
 	//FString NewPackageName = "/Game/aaaa";
 	FString NewPackageName = FilePath + AssetFileName;
@@ -1665,10 +1665,7 @@ bool UVrmBPFunctionLibrary::VRMBakeAnim(const USkeletalMeshComponent* skc, const
 		ase->MarkRawDataAsModified();
 #else
 		ase->GetController().SetPlayLength(totalTime);
-		//ase->MarkRawDataAsModified();
-		ase->SetUseRawDataOnly(true);
-		ase->FlagDependentAnimationsAsRawDataOnly();
-		ase->UpdateDependentStreamingAnimations();
+		ase->MarkRawDataAsModified();
 #endif
 
 
@@ -1683,10 +1680,13 @@ bool UVrmBPFunctionLibrary::VRMBakeAnim(const USkeletalMeshComponent* skc, const
 		ase->PostProcessSequence();
 	}
 #elif	UE_VERSION_OLDER_THAN(5,1,0)
-	ase->PostProcessSequence();
-	ase->MarkRawDataAsModified(true);
-	ase->OnRawDataChanged();
-	ase->MarkPackageDirty();
+	const bool bSourceDataExists = ase->HasSourceRawData();
+	if (bSourceDataExists)
+	{
+		ase->BakeTrackCurvesToRawAnimation();
+	} else {
+		ase->PostProcessSequence();
+	}
 #else
 		// todo
 #endif

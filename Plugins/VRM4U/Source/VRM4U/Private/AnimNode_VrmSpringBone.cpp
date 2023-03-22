@@ -401,7 +401,7 @@ namespace VRMSpring {
 		if (meta == nullptr) return;
 		if (bInit) return;
 
-		skeletalMesh = VRMGetSkinnedAsset(Output.AnimInstanceProxy->GetSkelMeshComponent());
+		skeletalMesh = Output.AnimInstanceProxy->GetSkelMeshComponent()->SkeletalMesh;
 		//skeletalMesh = meta->SkeletalMesh;
 		const FReferenceSkeleton &RefSkeleton = VRMGetRefSkeleton(skeletalMesh);
 		const auto &RefSkeletonTransform = Output.Pose.GetPose().GetBoneContainer().GetRefPoseArray();
@@ -889,7 +889,7 @@ void FAnimNode_VrmSpringBone::ConditionalDebugDraw(FPrimitiveDrawInterface* PDI,
 
 				for (int i = 0; i < boneList.Num(); ++i) {
 					TArray<int32> c;
-					GetDirectChildBonesLocal(VRMGetRefSkeleton( VRMGetSkinnedAsset(PreviewSkelMeshComp) ), boneList[i], c);
+					GetDirectChildBonesLocal(VRMGetRefSkeleton(PreviewSkelMeshComp->SkeletalMesh), boneList[i], c);
 					if (c.Num()) {
 						for (const auto cc : c) {
 							boneList.AddUnique(cc);

@@ -951,88 +951,76 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList) {
 
 		if (VRMConverter::Options::Get().IsVRM10Model() && VRMConverter::Options::Get().IsVRM10Bindpose() == false) {
 			if (vrmAssetList->Pose_bind.Num() == 0 || vrmAssetList->Pose_tpose.Num() == 0) {
-				UE_LOG(LogVRM4ULoader, Warning, TEXT("BindPose -> TPose :: no bindpose array!"));
+				UE_LOG(LogVRM4ULoader, Warning, TEXT("no bindpose array!"));
 			}else{
 				auto& info = vrmAssetList->MeshReturnedData->meshInfo;
 				struct WeightData {
+					int boneNo = 0;
 					FString boneName;
 					float weight = 0;
 				};
 				TMap<int, TArray<WeightData> > weightTable;
 				auto* scene = const_cast<aiScene*>(aiData);
 
-				// generate weightTable
-				{
-					int vertexOffset = 0;
-					for (uint32_t meshNo = 0; meshNo < scene->mNumMeshes; ++meshNo) {
-						auto* mesh = scene->mMeshes[meshNo];
-						for (uint32_t boneNo = 0; boneNo < mesh->mNumBones; ++boneNo) {
-							auto* bone = mesh->mBones[boneNo];
-							for (uint32_t weightNo = 0; weightNo < bone->mNumWeights; ++weightNo) {
-								auto weight = bone->mWeights[weightNo];
+				int vertexOffset = 0;
+				for (uint32_t meshNo = 0; meshNo < scene->mNumMeshes; ++meshNo) {
+					auto* mesh = scene->mMeshes[meshNo];
+					for (uint32_t boneNo = 0; boneNo < mesh->mNumBones; ++boneNo) {
+						auto* bone = mesh->mBones[boneNo];
+						for (uint32_t weightNo = 0; weightNo < bone->mNumWeights; ++weightNo) {
+							auto weight = bone->mWeights[weightNo];
 
-								WeightData d;
-								d.boneName = UTF8_TO_TCHAR(bone->mName.C_Str());
-								d.weight = weight.mWeight;
-								weightTable.FindOrAdd(vertexOffset + weight.mVertexId).Add(d);
-							}
+							WeightData d;
+							d.boneNo = boneNo;
+							d.boneName = UTF8_TO_TCHAR(bone->mName.C_Str());
+							d.weight = weight.mWeight;
+							weightTable.FindOrAdd(vertexOffset + weight.mVertexId).Add(d);
 						}
-						vertexOffset += mesh->mNumVertices;
 					}
-					// weight check
+					vertexOffset += mesh->mNumVertices;
 					for (auto w : weightTable) {
 						float f = 0.f;
 						for (auto data : w.Value) {
 							f += data.weight;
 						}
 						if (fabs(f - 1.f) > 0.01f) {
-							UE_LOG(LogVRM4ULoader, Warning, TEXT("BindPose -> TPose :: bad weight!"));
+							UE_LOG(LogVRM4ULoader, Warning, TEXT("bad weight!"));
 						}
 					}
-				}// end weightTable
 
-				// bind pose -> t pose
-				{
-					int vertexOffset = 0;
-					for (uint32_t meshNo = 0; meshNo < scene->mNumMeshes; ++meshNo) {
-						auto* mesh = scene->mMeshes[meshNo];
+					for (int vertexNo = 0; vertexNo < info[meshNo].Vertices.Num(); ++vertexNo) {
+						FVector v_orig = info[meshNo].Vertices[vertexNo];
+						FVector v(0, 0, 0);
 
-						for (int vertexNo = 0; vertexNo < info[meshNo].Vertices.Num(); ++vertexNo) {
-							FVector v_orig = info[meshNo].Vertices[vertexNo];
-							v_orig.Set(mesh->mVertices[vertexNo].x, mesh->mVertices[vertexNo].y, mesh->mVertices[vertexNo].z);
-							FVector v(0, 0, 0);
+						for (auto a : weightTable[vertexNo]) {
+							auto tpose = vrmAssetList->Pose_tpose.Find(a.boneName);
+							auto bpose = vrmAssetList->Pose_bind.Find(a.boneName);
+							//auto tpose = vrmAssetList->Pose_tpose.Find(UTF8_TO_TCHAR(mesh->mBones[a.boneNo]->mName.C_Str()));
+							//auto bpose = vrmAssetList->Pose_bind.Find(UTF8_TO_TCHAR(mesh->mBones[a.boneNo]->mName.C_Str()));
 
-							if (weightTable.Find(vertexOffset + vertexNo) == nullptr) {
-								UE_LOG(LogVRM4ULoader, Warning, TEXT("BindPose -> TPose :: no weight data %d"), vertexOffset + vertexNo);
-								continue;
-							}
-							for (auto a : weightTable[vertexOffset + vertexNo]) {
-								auto tpose = vrmAssetList->Pose_tpose.Find(a.boneName);
-								auto bpose = vrmAssetList->Pose_bind.Find(a.boneName);
-
-								if (tpose && bpose) {
-									FVector v_diff = (bpose->Inverse() * *tpose).TransformPosition(v_orig * 100.f);
-									v += v_diff * a.weight;
+							if (tpose && bpose) {
+								//FVector v_diff = (tpose->GetTranslation() - bpose->GetTranslation());
+								FVector v_diff = ((*tpose) * bpose->Inverse()).TransformFVector4(v_orig);
+								//FVector v_diff = (*tpose).TransformPosition(bpose->InverseTransformPosition(v_orig));
+								//FVector v_diff = (*tpose).TransformVector(bpose->InverseTransformVector(v_orig));
+								v += v_diff * a.weight;
 #if	UE_VERSION_OLDER_THAN(5,1,0)
-									float len = v.Size();
+								float len = v.Size();
 #else
-									float len = v.Length();
+								float len = v.Length();
 #endif
-									if (len >= 100000) {
-										UE_LOG(LogVRM4ULoader, Warning, TEXT("BindPose -> TPose :: bad weight!"));
-									}
+								if (len >= 100000) {
+									UE_LOG(LogVRM4ULoader, Warning, TEXT("bad weight!"));
 								}
-								else {
-									UE_LOG(LogVRM4ULoader, Warning, TEXT("BindPose -> TPose :: no pose transform %p %p"), tpose, bpose);
-								}
+							} else {
+								UE_LOG(LogVRM4ULoader, Warning, TEXT("no bindpose!"));
 							}
-							info[meshNo].Vertices[vertexNo] = v / 100.f;
 						}
-						vertexOffset += mesh->mNumVertices;
+						//info[meshNo].Vertices[vertexNo] = v;
 					}
 				}
 			}
-		}// end bind -> t pose
+		}
 
 		// begin vertex
 
@@ -1175,9 +1163,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList) {
 					auto a = result.meshInfo[meshID].Vertices[i] * 100.f;
 
 					v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(-a.X, a.Z, a.Y);
-					if (VRMConverter::Options::Get().IsVRM10Model()) {
-						v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(a.X, a.Y, a.Z);
-					}else if (VRMConverter::Options::Get().IsPMXModel() || VRMConverter::Options::Get().IsBVHModel()) {
+					if (VRMConverter::Options::Get().IsVRM10Model() || VRMConverter::Options::Get().IsPMXModel() || VRMConverter::Options::Get().IsBVHModel()) {
 						v.PositionVertexBuffer.VertexPosition(currentVertex + i).X *= -1.f;
 						v.PositionVertexBuffer.VertexPosition(currentVertex + i).Y *= -1.f;
 					}
